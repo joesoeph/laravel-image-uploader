@@ -11,9 +11,13 @@ class ImageUploadController extends Controller
     {
         $request->validate([
             'picture' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'path' => 'string',
         ]);
 
         $files = $request->file('picture');
+
+        // if path set in request, remove '/' from beginning and end of path
+        $path = $request->has('path') ? trim($request->path, '/') : '';
 
         $filenameWithExt = $files->getClientOriginalName();
         $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
@@ -21,13 +25,13 @@ class ImageUploadController extends Controller
 
         $fileNameToStore = $filename . "_" . time() . "." . $extension;
 
-        $files->storeAs('/public', $fileNameToStore);
+        $files->storeAs('public/' . $path, $fileNameToStore);
 
         return response()->json(['picture' => [
             'name' => $fileNameToStore,
             'size' => $files->getSize(),
             'mime' => $files->getMimeType(),
-            'url' => asset('storage/' . $fileNameToStore),
+            'url' => asset('storage/' . $path . '/' . $fileNameToStore),
         ]]);
     }
 }
